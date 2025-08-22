@@ -38,8 +38,7 @@ async function run() {
             res.send({ token })
         })
         // middlewares
-        const verifiToken = (req, res, next) => {
-            console.log(req.headers.authorization);
+        const verifyToken = (req, res, next) => {
             if (!req.headers.authorization) {
                 return res.status(401).send({ message: 'forbidden access' })
             }
@@ -68,11 +67,11 @@ async function run() {
         }
 
         // app user apis
-        app.get('/users', verifiToken,verifyadmin, async (req, res) => {
+        app.get('/users', verifyToken, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
         })
-        app.get('/users/admin/:email',verifiToken, async(req,res)=>{
+        app.get('/users/admin/:email',verifyToken,verifyadmin, async(req,res)=>{
             const email=req.params.email;
             if(email !==req.decoded.email){
                 return res.status(403).send({message:'Unauthorized access'})
@@ -96,7 +95,7 @@ async function run() {
             const result = await usersCollection.insertOne(user);
             res.send(result);
         })
-        app.patch('/users/admin/:id',verifiToken, async (req, res) => {
+        app.patch('/users/admin/:id',verifyToken, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updateDoc = {
@@ -107,16 +106,50 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updateDoc);
             res.send(result);
         })
-        app.delete('/users/:id',verifiToken,verifyadmin, async (req, res) => {
+        app.delete('/users/:id',verifyToken,verifyadmin, async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
+            const query = { _id:new ObjectId(id) };
             const result = await usersCollection.deleteOne(query);
-            res.send(result)
+            res.send(result);
         })
         // menu related Apis
         app.get('/menu', async (req, res) => {
             const result = await menuCollection.find().toArray();
             res.send(result)
+        })
+        app.get('/menu/:id',async(req,res)=>{
+            const id=req.params.id;
+            const query={_id:id}
+            const result=await menuCollection.findOne(query);
+            res.send(result);
+        })
+        app.post('/menu',verifyToken,verifyadmin, async(req,res)=>{
+            const menuItem=req.body;
+            const result=await menuCollection.insertOne(menuItem);
+            res.send(result);
+        })
+        app.patch('/menu/:id',async(req,res)=>{
+            const item=req.body;
+            const id=req.params.id;
+             const filter={_id:id}
+             const updatedDoc={
+                $set:{
+                    name:item.name,
+                    category:item.category,
+                    price:item.price,
+                    recipe:item.recipe,
+                    image:item.image
+                } 
+             }
+             const result =await menuCollection.updateOne(filter,updatedDoc);
+             res.send(result);
+        })
+        app.delete('/menu/:id',verifyToken,verifyadmin, async(req,res)=>{
+            const id=req.params.id;
+            const query1={_id:id};
+            // const query2={_id:new ObjectId(id)}
+            const result1=await menuCollection.deleteOne(query1);
+            res.send(result1);
         })
         // review related apis
         app.get('/reviews', async (req, res) => {
@@ -135,7 +168,7 @@ async function run() {
             const result = await cartCollection.insertOne(cartItem);
             res.send(result);
         });
-        app.delete('/carts/:id', async (req, res) => {
+        app.delete('/carts/:id',verifyToken,verifyadmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await cartCollection.deleteOne(query);
