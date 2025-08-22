@@ -119,7 +119,7 @@ async function run() {
         })
         app.get('/menu/:id',async(req,res)=>{
             const id=req.params.id;
-            const query={_id:id}
+            const query={_id:new ObjectId(id)}
             const result=await menuCollection.findOne(query);
             res.send(result);
         })
@@ -131,7 +131,7 @@ async function run() {
         app.patch('/menu/:id',async(req,res)=>{
             const item=req.body;
             const id=req.params.id;
-             const filter={_id:id}
+             const filter={_id:new ObjectId(id)}
              const updatedDoc={
                 $set:{
                     name:item.name,
@@ -146,10 +146,10 @@ async function run() {
         })
         app.delete('/menu/:id',verifyToken,verifyadmin, async(req,res)=>{
             const id=req.params.id;
-            const query1={_id:id};
+            const query={_id:new ObjectId(id)};
             // const query2={_id:new ObjectId(id)}
-            const result1=await menuCollection.deleteOne(query1);
-            res.send(result1);
+            const result=await menuCollection.deleteOne(query);
+            res.send(result);
         })
         // review related apis
         app.get('/reviews', async (req, res) => {
